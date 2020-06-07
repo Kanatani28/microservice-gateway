@@ -1,12 +1,22 @@
 package com.example
 
+import com.google.protobuf.Descriptors
+import helloworld.GreeterGrpcKt
+import helloworld.HelloReply
+import helloworld.HelloRequest
+import io.grpc.ManagedChannel
+import io.grpc.protobuf.ProtoUtils
+import io.micronaut.context.annotation.Factory
+import io.micronaut.grpc.annotation.GrpcChannel
+import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.annotation.*
 import io.micronaut.security.annotation.Secured
 import org.apache.commons.codec.digest.DigestUtils
 import java.security.Principal
+import javax.inject.Singleton
 
 @Controller("/")
-class ExampleController(private val userRepository: UserRepository) {
+class ExampleController(private val userRepository: UserRepository, private val greetingClient : GreeterGrpcKt.GreeterCoroutineStub) {
 
     @Secured("isAnonymous()")
     @Get("/hello")
@@ -51,5 +61,23 @@ class ExampleController(private val userRepository: UserRepository) {
     fun lo(user: User): User? {
         user.password = DigestUtils.sha256Hex(user.password)
         return userRepository.findByLoginIdAndPassword(user.loginId, user.password)
+    }
+
+    @Get("/grpc")
+    @Secured("isAnonymous()")
+    suspend fun g(): String {
+        val rep = greetingClient.sayHello(HelloRequest.newBuilder().setName("John").build())
+
+        return rep.toString();
+    }
+}
+
+@Factory
+class Clients {
+    @Singleton
+    fun greetingClient( @GrpcChannel(GrpcServerChannel.NAME) channel : ManagedChannel) : GreeterGrpcKt.GreeterCoroutineStub {
+        return GreeterGrpcKt.GreeterCoroutineStub(
+                channel
+        )
     }
 }
