@@ -1,0 +1,19 @@
+version: '3'
+services:
+  ### DB
+  user_db:
+    image: mysql
+    container_name: user_db
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    ports:
+      - '33306:3306'
+    expose:
+      - '3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: g_exam_gateway
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      TZ: "Asia/Tokyo"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d
