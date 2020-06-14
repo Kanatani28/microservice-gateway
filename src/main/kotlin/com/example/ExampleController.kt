@@ -99,14 +99,14 @@ class Clients {
         )
     }
     @Singleton
-    fun questionClient( @GrpcChannel(GrpcServerChannel.NAME) channel : ManagedChannel) : QuestionServiceGrpcKt.QuestionServiceCoroutineStub {
+    fun questionClient( @GrpcChannel("question") channel : ManagedChannel) : QuestionServiceGrpcKt.QuestionServiceCoroutineStub {
         return QuestionServiceGrpcKt.QuestionServiceCoroutineStub(
                 channel
         )
     }
 
     @Singleton
-    fun scoreClient( @GrpcChannel(GrpcServerChannel.NAME) channel : ManagedChannel) : ScoreServiceGrpcKt.ScoreServiceCoroutineStub {
+    fun scoreClient( @GrpcChannel("score") channel : ManagedChannel) : ScoreServiceGrpcKt.ScoreServiceCoroutineStub {
         return ScoreServiceGrpcKt.ScoreServiceCoroutineStub(
                 channel
         )

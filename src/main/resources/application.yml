@@ -38,3 +38,12 @@ datasources:
 grpc:
   server:
     port: 18080
+  channels:
+    question:
+      address: 'localhost:18080'
+      plaintext: true
+      max-retry-attempts: 10
+    score:
+      address: 'localhost:58000'
+      plaintext: true
+      max-retry-attempts: 10
