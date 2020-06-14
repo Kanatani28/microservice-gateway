@@ -55,6 +55,7 @@ dependencies {
     testImplementation("io.micronaut.test:micronaut-test-kotlintest")
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("io.kotlintest:kotlintest-runner-junit5:3.3.2")
+    compile group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.12.2'
 }
 
 test.classpath += configurations.developmentOnly

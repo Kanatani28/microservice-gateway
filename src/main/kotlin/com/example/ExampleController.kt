@@ -1,11 +1,11 @@
 package com.example
 
 import com.google.protobuf.Descriptors
+import com.google.protobuf.util.JsonFormat
+import grpc_schemas.*
 import helloworld.GreeterGrpcKt
-import helloworld.HelloReply
 import helloworld.HelloRequest
 import io.grpc.ManagedChannel
-import io.grpc.protobuf.ProtoUtils
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
@@ -16,7 +16,10 @@ import java.security.Principal
 import javax.inject.Singleton
 
 @Controller("/")
-class ExampleController(private val userRepository: UserRepository, private val greetingClient : GreeterGrpcKt.GreeterCoroutineStub) {
+class ExampleController(private val userRepository: UserRepository,
+                        private val questionClient: QuestionServiceGrpcKt.QuestionServiceCoroutineStub,
+                        private val scoreClient: ScoreServiceGrpcKt.ScoreServiceCoroutineStub,
+                        private val greeterClient: GreeterGrpcKt.GreeterCoroutineStub) {
 
     @Secured("isAnonymous()")
     @Get("/hello")
@@ -63,12 +66,27 @@ class ExampleController(private val userRepository: UserRepository, private val 
         return userRepository.findByLoginIdAndPassword(user.loginId, user.password)
     }
 
+
     @Get("/grpc")
     @Secured("isAnonymous()")
     suspend fun g(): String {
-        val rep = greetingClient.sayHello(HelloRequest.newBuilder().setName("John").build())
+        val rep = greeterClient.sayHello(HelloRequest.newBuilder().setName("John").build())
 
         return rep.toString();
+    }
+
+    @Get("/grpc_q")
+    @Secured("isAnonymous()")
+    suspend fun questions(): String {
+        val rep = questionClient.getQuestions(QuestionListRequest.newBuilder().setYearTimeId(1).build())
+        return JsonFormat.printer().print(rep)
+    }
+
+    @Get("/grpc_s")
+    @Secured("isAnonymous()")
+    suspend fun scores(): String {
+        val rep = scoreClient.getScores(ScoreRequest.newBuilder().setUserId(1).build())
+        return JsonFormat.printer().print(rep)
     }
 }
 
@@ -80,4 +98,18 @@ class Clients {
                 channel
         )
     }
+    @Singleton
+    fun questionClient( @GrpcChannel(GrpcServerChannel.NAME) channel : ManagedChannel) : QuestionServiceGrpcKt.QuestionServiceCoroutineStub {
+        return QuestionServiceGrpcKt.QuestionServiceCoroutineStub(
+                channel
+        )
+    }
+
+    @Singleton
+    fun scoreClient( @GrpcChannel(GrpcServerChannel.NAME) channel : ManagedChannel) : ScoreServiceGrpcKt.ScoreServiceCoroutineStub {
+        return ScoreServiceGrpcKt.ScoreServiceCoroutineStub(
+                channel
+        )
+    }
+
 }

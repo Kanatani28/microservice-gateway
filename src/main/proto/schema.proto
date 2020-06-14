@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "grpc_schemas";
+option java_outer_classname = "SchemasProto";
+option objc_class_prefix = "SCHEMA";
+
+package grpc_schemas;
+
+// request
+message ScoreRequest {
+    int32 user_id = 1;
+}
+
+// response
+message ScoreListResponse {
+    repeated Score scores = 1;
+}
+
+// types
+
+message DateTime {
+    int32 year = 1;
+    int32 month = 2;
+    int32 day = 3;
+    int32 hour = 4;
+    int32 minutes = 5;
+    int32 seconds = 6;
+}
+
+message Score {
+    int32 id = 1;
+    int32 user_id = 2;
+    int32 year = 3;
+    int32 time_num = 4;
+    int32 score = 5;
+    repeated Mistake mistakes = 6;
+    DateTime created_at = 7;
+    DateTime updated_at = 8;
+    DateTime deleted_at = 9;
+}
+
+message Mistake {
+    int32 id = 1;
+    int32 question_num = 2;
+    DateTime created_at = 3;
+    DateTime updated_at = 4;
+    DateTime deleted_at = 5;
+}
+
+// interface
+service ScoreService{
+    rpc GetScores (ScoreRequest) returns (ScoreListResponse) {}
+}
+
+// request
+message QuestionListRequest {
+    // int32 year = 1;
+    // int32 time_num = 2;
+    int32 year_time_id = 1;
+}
+
+// response
+message QuestionListResponse {
+    YearTime year_time = 1;
+    repeated Question questions = 2;
+}
+
+// types
+
+message Question {
+    int32 id = 1;
+    int32 year_time_id = 2;
+    int32 sort_order = 3;
+    string question = 4;
+    repeated Choice choices = 5;
+    DateTime created_at = 6;
+    DateTime updated_at = 7;
+    DateTime deleted_at = 8;
+}
+
+message Choice {
+    int32 id = 1;
+    int32 question_id = 2;
+    int32 sort_order = 3;
+    int32 is_correct = 4;
+    string choice = 5;
+    DateTime created_at = 6;
+    DateTime updated_at = 7;
+    DateTime deleted_at = 8;
+}
+
+message YearTime {
+    int32 id = 1;
+    int32 year = 2;
+    int32 time_num =3;
+    DateTime created_at = 6;
+    DateTime updated_at = 7;
+    DateTime deleted_at = 8;
+}
+
+// interface
+service QuestionService {
+    rpc GetQuestions (QuestionListRequest) returns (QuestionListResponse) {}
+}
