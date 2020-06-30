@@ -1,19 +1,32 @@
 package com.example
 
-import com.google.protobuf.Descriptors
+import com.fasterxml.jackson.module.kotlin.*
 import com.google.protobuf.util.JsonFormat
-import grpc_schemas.*
+import grpc_schemas.QuestionListRequest
+import grpc_schemas.QuestionServiceGrpcKt
+import grpc_schemas.ScoreRequest
+import grpc_schemas.ScoreServiceGrpcKt
 import helloworld.GreeterGrpcKt
 import helloworld.HelloRequest
 import io.grpc.ManagedChannel
 import io.micronaut.context.annotation.Factory
 import io.micronaut.grpc.annotation.GrpcChannel
 import io.micronaut.grpc.server.GrpcServerChannel
-import io.micronaut.http.annotation.*
+import io.micronaut.http.HttpRequest
+import io.micronaut.http.HttpResponse
+import io.micronaut.http.MutableHttpResponse
+import io.micronaut.http.annotation.Body
+import io.micronaut.http.annotation.Controller
+import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Post
+import io.micronaut.http.client.RxHttpClient
+import io.micronaut.http.cookie.Cookie
 import io.micronaut.security.annotation.Secured
 import org.apache.commons.codec.digest.DigestUtils
+import java.net.URL
 import java.security.Principal
 import javax.inject.Singleton
+
 
 @Controller("/")
 class ExampleController(private val userRepository: UserRepository,
@@ -22,9 +35,22 @@ class ExampleController(private val userRepository: UserRepository,
                         private val greeterClient: GreeterGrpcKt.GreeterCoroutineStub) {
 
     @Secured("isAnonymous()")
-    @Get("/hello")
-    fun helloWorld(): String {
-        return "Hello. ";
+    @Post("/auth")
+    fun auth(@Body authInfo: Map<String, String>): MutableHttpResponse<Any>? {
+
+        val client = RxHttpClient.create(URL("http://localhost:8080"))
+        val res = client.retrieve(HttpRequest.POST("/login", authInfo))
+        val jsonMapper = jacksonObjectMapper()
+        val authResult = jsonMapper.readValue<Map<String, String>>(res.blockingFirst())
+        val cookie = Cookie.of("JWT", authResult.getValue("access_token"))
+        return HttpResponse.ok<Any>().cookie(cookie)
+    }
+
+    @Secured("isAnonymous()")
+    @Get("/authSuccess")
+    fun authSuccess(): MutableHttpResponse<Any>? {
+        val cookie = Cookie.of("JWT", "a")
+        return HttpResponse.ok<Any>().cookie(cookie)
     }
 
     @Secured("isAnonymous()")

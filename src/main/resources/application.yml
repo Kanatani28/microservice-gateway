@@ -10,7 +10,8 @@ micronaut:
         enabled: true
     authentication: cookie
     redirect:
-        login-failure: /authFailed
+      login-success: /authSuccess
+      login-failure: /authFailed
     token:
       jwt:
         signatures:
@@ -19,6 +20,15 @@ micronaut:
               secret: '"${JWT_GENERATOR_SIGNATURE_SECRET:pleaseChangeThisSecretForANewOne}"'
         cookie:
           enabled: true
+          cookie-http-only: true
+  server:
+    cors:
+      enabled: true
+      configurations:
+        web:
+          maxAge: 3600
+          allowedOrigins:
+            - http://localhost:3001
   io:
     watch:
       paths: src/main

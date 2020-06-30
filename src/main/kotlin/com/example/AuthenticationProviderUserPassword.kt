@@ -18,7 +18,8 @@ class AuthenticationProviderUserPassword(private val userRepository: UserReposit
             val u = userRepository.findByLoginIdAndPassword(authenticationRequest.identity.toString(), sha256Password)
 //            if (authenticationRequest.identity == "sherlock" && authenticationRequest.secret == "password") {
             if (u != null) {
-                return Flowable.just<AuthenticationResponse>(UserDetails(authenticationRequest.identity as String, ArrayList()))
+                val resp = Flowable.just<AuthenticationResponse>(UserDetails(authenticationRequest.identity as String, ArrayList()))
+                return resp
             }
         }
         return Flowable.just<AuthenticationResponse>(AuthenticationFailed())
