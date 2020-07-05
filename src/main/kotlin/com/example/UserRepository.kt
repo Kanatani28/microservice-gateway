@@ -11,6 +11,8 @@ interface UserRepository: CrudRepository<User, Long> {
 
     fun findById(id: String): Optional<User>
 
+    fun findByLoginId(loginId: String): User?
+
     fun findByLoginIdAndPassword(loginId: String, password: String): User?
 
     fun save(entity: User): User

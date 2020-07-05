@@ -2,10 +2,7 @@ package com.example
 
 import com.fasterxml.jackson.module.kotlin.*
 import com.google.protobuf.util.JsonFormat
-import grpc_schemas.QuestionListRequest
-import grpc_schemas.QuestionServiceGrpcKt
-import grpc_schemas.ScoreRequest
-import grpc_schemas.ScoreServiceGrpcKt
+import grpc_schemas.*
 import helloworld.GreeterGrpcKt
 import helloworld.HelloRequest
 import io.grpc.ManagedChannel
@@ -15,10 +12,7 @@ import io.micronaut.grpc.server.GrpcServerChannel
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.MutableHttpResponse
-import io.micronaut.http.annotation.Body
-import io.micronaut.http.annotation.Controller
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Post
+import io.micronaut.http.annotation.*
 import io.micronaut.http.client.RxHttpClient
 import io.micronaut.http.cookie.Cookie
 import io.micronaut.security.annotation.Secured
@@ -47,16 +41,41 @@ class ExampleController(private val userRepository: UserRepository,
     }
 
     @Secured("isAnonymous()")
-    @Get("/authSuccess")
-    fun authSuccess(): MutableHttpResponse<Any>? {
-        val cookie = Cookie.of("JWT", "a")
-        return HttpResponse.ok<Any>().cookie(cookie)
+    @Get("/questions/{yearTimeId}")
+    suspend fun getQuestionList(@PathVariable yearTimeId: Int): String {
+        val rep = questionClient.getQuestions(QuestionListRequest.newBuilder().setYearTimeId(yearTimeId).build())
+        return JsonFormat.printer().print(rep)
     }
 
     @Secured("isAnonymous()")
-    @Post("/login2")
-    fun login(@Body user: User) {
-        println(user);
+    @Get("/question/{questionId}")
+    suspend fun getQuestion(@PathVariable questionId: Int): String {
+        val rep = questionClient.getQuestion(QuestionRequest.newBuilder().setQuestionId(questionId).build())
+        return JsonFormat.printer().print(rep)
+    }
+
+    @Secured("isAnonymous()")
+    @Get("/year-times")
+    suspend fun getYearTimeList(): String{
+        val rep = questionClient.getYearTimeList(YearTimeListRequest.getDefaultInstance())
+        return JsonFormat.printer().print(rep)
+    }
+
+    @Secured("isAuthenticated()")
+    @Get("/scores")
+    suspend fun getScores(principal: Principal): String {
+        val loginUser = userRepository.findByLoginId(principal.name) ?: throw Exception("Not Found")
+        val id = loginUser.id!!.toInt()
+        val rep = scoreClient.getScores(ScoreRequest.newBuilder().setUserId(id).build())
+        return JsonFormat.printer().print(rep)
+    }
+
+    @Secured("isAuthenticated()")
+    @Post("/practice")
+    fun postPracticeAnswers(@Body answers: List<String>): String{
+        val client = RxHttpClient.create(URL("http://localhost:3000"))
+        val res = client.retrieve(HttpRequest.POST("/practice", answers))
+        return res.blockingFirst()
     }
 
     @Secured("isAnonymous()")
@@ -68,6 +87,7 @@ class ExampleController(private val userRepository: UserRepository,
     @Secured("isAuthenticated()")
     @Get("/hello2")
     fun index(principal: Principal): Principal {
+        principal.name
         return principal
     }
 
