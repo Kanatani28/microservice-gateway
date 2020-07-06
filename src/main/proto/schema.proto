@@ -49,9 +49,14 @@ message Mistake {
     DateTime deleted_at = 6;
 }
 
+message PostScoreResponse {
+    int32 status = 1;
+}
+
 // interface
 service ScoreService{
     rpc GetScores (ScoreRequest) returns (ScoreListResponse) {}
+    rpc PostScore (Score) returns (PostScoreResponse) {}
 }
 
 // request

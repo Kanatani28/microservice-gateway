@@ -83,10 +83,45 @@ class ExampleController(private val userRepository: UserRepository,
 
     @Secured("isAuthenticated()")
     @Post("/practice")
-    fun postPracticeAnswers(@Body answers: List<String>): String{
-        val client = RxHttpClient.create(URL("http://localhost:3000"))
-        val res = client.retrieve(HttpRequest.POST("/practice", answers))
-        return res.blockingFirst()
+    suspend fun postPracticeAnswers(@Body postData: Map<String, Any>, principal: Principal): String {
+        val loginUser = userRepository.findByLoginId(principal.name) ?: throw Exception("Not Found")
+        val userId = loginUser.id!!.toInt()
+
+        val yearTimeId = Integer.parseInt(postData["yearTimeId"] as String?)
+        val userAnswers = postData["answers"] as List<String>
+
+        val questionListResp = questionClient.getQuestions(QuestionListRequest.newBuilder().setYearTimeId(yearTimeId).build())
+
+        var score = 0
+        var year = 0
+        var timeNum = 0
+
+        var builder = Score.newBuilder()
+
+        for(i in questionListResp.questionsList.indices) {
+            val question = questionListResp.questionsList[i]
+            val questionAnswer = question.answer.toString()
+            year = question.year
+            timeNum = question.timeNum
+            if(questionAnswer == userAnswers[i]) {
+                score++
+            } else {
+                val mistake = Mistake.newBuilder()
+                        .setQuestionId(question.id)
+                        .setSortOrder(question.sortOrder)
+                        .build()
+
+                builder = builder.addMistakes(mistake)
+            }
+        }
+
+        val scoreRequest = builder.setUserId(userId)
+                .setYear(year)
+                .setTimeNum(timeNum)
+                .setScore(score).build()
+
+        val res = scoreClient.postScore(scoreRequest)
+        return JsonFormat.printer().print(res)
     }
 
     @Secured("isAnonymous()")
