@@ -56,9 +56,20 @@ class ExampleController(private val userRepository: UserRepository,
 
     @Secured("isAnonymous()")
     @Get("/year-times")
-    suspend fun getYearTimeList(): String{
+    suspend fun getYearTimeList(): Any{
         val rep = questionClient.getYearTimeList(YearTimeListRequest.getDefaultInstance())
-        return JsonFormat.printer().print(rep)
+        val years = rep.yearTimeListList.map { yearTime -> yearTime.year }.distinct()
+        val map = years.map {
+            year ->
+            val timeList = rep.yearTimeListList.filter { yearTime ->  yearTime.year == year }
+                    .map { yearTime -> mapOf(
+                            "timeNum" to yearTime.timeNum,
+                            "id" to yearTime.id,
+                            "questionCnt" to yearTime.questionCnt)
+                    }
+            mapOf("timeList" to timeList, "year" to year)
+        }
+        return map
     }
 
     @Secured("isAuthenticated()")
